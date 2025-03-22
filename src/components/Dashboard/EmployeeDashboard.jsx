@@ -1,16 +1,27 @@
-import React from 'react'
-import Header from '../other/Header'
-import TaskListNumbers from '../other/TaskListNumbers'
-import TaskList from '../TaskList/TaskList'
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react';
+import Header from '../other/Header';
+import TaskListNumbers from '../other/TaskListNumbers';
+import TaskList from '../TaskList/TaskList';
 
 const EmployeeDashboard = (props) => {
+  // Load tasks from localStorage or props
+  const [tasks, setTasks] = useState(() => {
+    const savedTasks = localStorage.getItem('tasks');
+    return savedTasks ? JSON.parse(savedTasks) : props.data.tasks.map((task, index) => ({ ...task, id: index + 1 }));
+  });
 
-  const [tasks, setTasks] = useState(
-    props.data.tasks.map((task, index) => ({ ...task, id: index + 1 })) // Assign unique IDs
-  );
-  
-  const [taskCounts, setTaskCounts] = useState(props.data.taskCounts);// Use state here
+  const [taskCounts, setTaskCounts] = useState(() => {
+    const savedCounts = localStorage.getItem('taskCounts');
+    return savedCounts ? JSON.parse(savedCounts) : props.data.taskCounts;
+  });
+
+  //  Sync with localStorage when a new task is added
+  useEffect(() => {
+    const savedTasks = localStorage.getItem('tasks');
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
+    }
+  }, []); // Runs once when the component mounts
 
   const updateTaskStatus = (taskId, newStatus) => {
     const updatedTasks = tasks.map(task => {
@@ -25,7 +36,7 @@ const EmployeeDashboard = (props) => {
       }
       return task;
     });
-  
+
     setTasks(updatedTasks);
 
     const newTaskCounts = {
@@ -36,17 +47,19 @@ const EmployeeDashboard = (props) => {
     };
 
     setTaskCounts(newTaskCounts);
-  };
 
-  
+    // ✅ Update localStorage when a task status is changed
+    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    localStorage.setItem('taskCounts', JSON.stringify(newTaskCounts));
+  };
 
   return (
     <div className='p-10 bg-[#1C1C1C] h-screen'>
         <Header changeUser={props.changeUser} data={props.data}/>
         <TaskListNumbers taskCounts={taskCounts} />
-        <TaskList tasks={tasks}  updateTaskStatus={updateTaskStatus}/>
+        <TaskList tasks={tasks} updateTaskStatus={updateTaskStatus} />
     </div>
-  )
-}
+  );
+};
 
-export default EmployeeDashboard
+export default EmployeeDashboard;

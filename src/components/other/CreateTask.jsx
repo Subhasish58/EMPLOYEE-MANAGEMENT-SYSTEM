@@ -11,34 +11,55 @@ const CreateTask = () => {
     const [assignTo, setAssignTo] = useState('')
     const [category, setCategory] = useState('')
 
-    const submitHandler=(e)=> {
-        e.preventDefault()
-
-        const newTask={id: Date.now(), taskTitle, taskDescription, taskDate, category, active: false, newTask: true, failed: false, completed: false };
-        
+    const submitHandler = (e) => {
+        e.preventDefault();
+    
+        const newTask = { 
+            taskTitle, 
+            taskDescription, 
+            taskDate, 
+            category, 
+            active: false, 
+            newTask: true, 
+            failed: false, 
+            completed: false,
+            id: Date.now() // Generate unique ID
+        };
+    
         const updatedUserData = userData.map((elem) => {
             if (assignTo === elem.firstName) {
+                const updatedTasks = [...elem.tasks, newTask];
+                
+                // ✅ Save tasks in localStorage so EmployeeDashboard gets updated
+                if (localStorage.getItem('tasks')) {
+                    const savedTasks = JSON.parse(localStorage.getItem('tasks'));
+                    localStorage.setItem('tasks', JSON.stringify([...savedTasks, newTask]));
+                } else {
+                    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+                }
+    
                 return {
-                    ...elem,  // Copy existing user data
-                    tasks: [...elem.tasks, newTask], // Add new task
+                    ...elem,
+                    tasks: updatedTasks,
                     taskCounts: {
                         ...elem.taskCounts,
-                        newTask: elem.taskCounts.newTask + 1 // Increase count
+                        newTask: elem.taskCounts.newTask + 1
                     }
                 };
             }
             return elem;
         });
     
-        setUserData(updatedUserData);  
-        console.log(updatedUserData);
-
-        setTaskTitle('')
-        setCategory('')
-        setAssignTo('')
-        setTaskDate('')
-        setTaskDescription('')
-    }
+        setUserData(updatedUserData);
+        
+        // Reset form
+        setTaskTitle('');
+        setCategory('');
+        setAssignTo('');
+        setTaskDate('');
+        setTaskDescription('');
+    };
+    
 
     return (
         <div className='p-5 bg-[#1c1c1c] mt-5 rounded'>
