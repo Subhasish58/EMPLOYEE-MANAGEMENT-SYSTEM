@@ -14,7 +14,7 @@ const CreateTask = () => {
     const submitHandler=(e)=> {
         e.preventDefault()
 
-        const newTask={taskTitle, taskDescription, taskDate, category, active: false, newTask: true, failed: false, completed: false };
+        const newTask={id: Date.now(), taskTitle, taskDescription, taskDate, category, active: false, newTask: true, failed: false, completed: false };
         
         const updatedUserData = userData.map((elem) => {
             if (assignTo === elem.firstName) {
