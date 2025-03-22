@@ -1,33 +1,55 @@
-import React from 'react'
-import Header from '../other/Header'
-import TaskListNumbers from '../other/TaskListNumbers'
-import TaskList from '../TaskList/TaskList'
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react';
+import Header from '../other/Header';
+import TaskListNumbers from '../other/TaskListNumbers';
+import TaskList from '../TaskList/TaskList';
 
 const EmployeeDashboard = (props) => {
+  // Load tasks from localStorage or initialize with unique IDs
+  const [tasks, setTasks] = useState(() => {
+    const savedTasks = localStorage.getItem('tasks');
+    let loadedTasks = savedTasks ? JSON.parse(savedTasks) : props.data.tasks;
 
-  const [tasks, setTasks] = useState(
-    props.data.tasks.map((task, index) => ({ ...task, id: index + 1 })) // Assign unique IDs
-  );
-  
-  const [taskCounts, setTaskCounts] = useState(props.data.taskCounts);// Use state here
+    // Ensure every task has a unique ID
+    loadedTasks = loadedTasks.map((task, index) => ({
+      ...task,
+      id: task.id ?? Date.now() + index, // Assign unique ID if missing
+    }));
+
+    console.log(" Loaded tasks with ensured IDs:", loadedTasks);
+    return loadedTasks;
+  });
+
+  // Load task counts from localStorage or initialize
+  const [taskCounts, setTaskCounts] = useState(() => {
+    const savedCounts = localStorage.getItem('taskCounts');
+    return savedCounts ? JSON.parse(savedCounts) : props.data.taskCounts;
+  });
+
+  // Save tasks to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    localStorage.setItem('taskCounts', JSON.stringify(taskCounts));
+  }, [tasks, taskCounts]);
 
   const updateTaskStatus = (taskId, newStatus) => {
-    const updatedTasks = tasks.map(task => {
-      if (task.id === taskId) {
-        if (newStatus === 'accepted') {
-          return { ...task, newTask: false, active: true }; // Mark as active
-        } else if (newStatus === 'completed') {
-          return { ...task, newTask: false, active: false, completed: true }; // Mark as completed
-        } else if (newStatus === 'failed') {
-          return { ...task, newTask: false, active: false, failed: true }; // Mark as failed
-        }
-      }
-      return task;
-    });
-  
-    setTasks(updatedTasks);
+    console.log(" Updating Task ID:", taskId);
 
+    const updatedTasks = tasks.map(task => 
+      task.id === taskId
+        ? { 
+            ...task, 
+            newTask: false, 
+            active: newStatus === 'accepted', 
+            completed: newStatus === 'completed', 
+            failed: newStatus === 'failed' 
+          }
+        : task
+    );
+
+    console.log(" Updated tasks:", updatedTasks);
+    setTasks([...updatedTasks]); // Ensure state change is detected
+
+    // Update task counts
     const newTaskCounts = {
       newTask: updatedTasks.filter(task => task.newTask).length,
       completed: updatedTasks.filter(task => task.completed).length,
@@ -35,18 +57,21 @@ const EmployeeDashboard = (props) => {
       failed: updatedTasks.filter(task => task.failed).length,
     };
 
-    setTaskCounts(newTaskCounts);
-  };
+    console.log(" Updated task counts:", newTaskCounts);
+    setTaskCounts({ ...newTaskCounts });
 
-  
+    // Save to localStorage
+    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    localStorage.setItem('taskCounts', JSON.stringify(newTaskCounts));
+  };
 
   return (
     <div className='p-10 bg-[#1C1C1C] h-screen'>
         <Header changeUser={props.changeUser} data={props.data}/>
         <TaskListNumbers taskCounts={taskCounts} />
-        <TaskList tasks={tasks}  updateTaskStatus={updateTaskStatus}/>
+        <TaskList tasks={tasks} updateTaskStatus={updateTaskStatus}/>
     </div>
-  )
-}
+  );
+};
 
-export default EmployeeDashboard
+export default EmployeeDashboard;
